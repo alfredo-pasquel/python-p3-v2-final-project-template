@@ -39,7 +39,10 @@ class ColorManager:
 
     @classmethod
     def get_location_color(cls, location):
-        if location not in cls.location_colors:
+        # Normalize location to lowercase for consistency
+        normalized_location = location.strip().lower()
+
+        if normalized_location not in cls.location_colors:
             available_colors = [color for color in cls.COLORS if color not in cls.used_location_colors]
             
             # If no available colors, reset the used colors
@@ -49,10 +52,10 @@ class ColorManager:
 
             # Assign a random color from the available colors
             selected_color = random.choice(available_colors)
-            cls.location_colors[location] = selected_color
+            cls.location_colors[normalized_location] = selected_color
             cls.used_location_colors.add(selected_color)
 
-        return cls.location_colors[location]
+        return cls.location_colors[normalized_location]
 
 # Function to select a date using tkcalendar
 def select_date_gui():
@@ -273,7 +276,7 @@ def view_band_related_tours():
         print(Fore.RED + "No tours found for this band.")
     else:
         for tour in tour_dates:
-            print(Fore.YELLOW + f"ID: {tour[0]}, Location: {tour[2]}, Date: {tour[3]}, Venue: {tour[4]}")
+            print(Fore.YELLOW + f"ID: {tour[0]}, Location: {tour[3]}, Date: {tour[4]}, Venue: {tour[5]}")
 
 def view_tour_dates():
     print(Fore.BLUE + "How would you like to filter the tour dates?")
@@ -295,17 +298,17 @@ def view_tour_dates():
             print(Fore.RED + "Band not found.")
             return
         
-        # Fetch tour dates for the band
         tour_dates = TourDate.find_by_band(band[0])
         if not tour_dates:
             print(Fore.RED + f"No tour dates found for band {band[1]}.")
         else:
             for tour in tour_dates:
+                # Normalize location name before applying color
                 location_color = ColorManager.get_location_color(tour[3])
                 print(location_color + f"ID: {tour[0]}, Band: {tour[2]} (ID: {tour[1]}), Location: {tour[3]}, Date: {tour[4]}, Venue: {tour[5]}")
 
     elif choice == "2":
-        location = input(Fore.CYAN + "Enter the location: ")
+        location = input(Fore.CYAN + "Enter the location: ").strip().lower()  # Normalize user input for comparison
         tour_dates = TourDate.find_by_location(location)
 
         if not tour_dates:
@@ -327,7 +330,6 @@ def view_tour_dates():
                 print(location_color + f"ID: {tour[0]}, Band: {tour[2]} (ID: {tour[1]}), Location: {tour[3]}, Date: {tour[4]}, Venue: {tour[5]}")
 
     elif choice == "4":
-        # View all tour dates in chronological order
         tour_dates = TourDate.all_chronological()
 
         if not tour_dates:
