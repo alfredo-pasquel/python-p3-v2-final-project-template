@@ -1,172 +1,93 @@
-# Phase 3 CLI+ORM Project Template
+# Band Tour Manager CLI
 
-## Learning Goals
+This is a Python-based Command Line Interface (CLI) application for managing bands and scheduling their tour dates. The app allows users to create, view, update, and delete bands and tour dates, as well as view related information such as tour dates for a particular band.
 
-- Discuss the basic directory structure of a CLI.
-- Outline the first steps in building a CLI.
+## Features
 
----
+- **Create, View, Update, and Delete Bands**: Manage band details including name and genre.
+- **Schedule Tour Dates**: Schedule new tour dates for a band by specifying the location, venue, and date.
+- **View Tour Dates**: Filter tour dates by band, location, or venue.
+- **Update and Delete Tour Dates**: Modify or remove tour dates, with automatic validation to prevent double bookings.
+- **Color-Coded Output**: Bands and tour dates are color-coded for better readability based on genre and location.
 
-## Introduction
+## Dependencies
 
-You now have a basic idea of what constitutes a CLI. Fork and clone this lesson
-for a project template for your CLI.
+The app uses several Python libraries to handle various aspects of functionality:
 
-Take a look at the directory structure:
+### 1. `colorama`
+Used to color the terminal output, making it easier to differentiate between genres and locations when displaying bands and tour dates.
 
-```console
-.
-├── Pipfile
-├── Pipfile.lock
-├── README.md
-└── lib
-    ├── models
-    │   ├── __init__.py
-    │   └── model_1.py
-    ├── cli.py
-    ├── debug.py
-    └── helpers.py
+### 2. `tkcalendar`
+Used for selecting dates in a graphical interface, allowing users to visually pick a date when scheduling or updating tour dates.
+
+### 3. `sqlite3`
+This app uses SQLite as its database to store bands and tour dates. SQLite is lightweight and doesn’t require a separate database server, making it ideal for this CLI application.
+
+## How to Run the App
+
+### 1. Clone the repository
+```bash
+git clone <repository-url>
+cd <repository-directory>
 ```
 
-Note: The directory also includes two files named `CONTRIBUTING.md` and
-`LICENSE.md` that are specific to Flatiron's curriculum. You can disregard or
-delete the files if you want.
+### 2. Install the required dependencies using `pipenv`
+If you don’t have `pipenv` installed, first install it with:
+```bash
+pip install pipenv
+```
 
----
-
-## Generating Your Environment
-
-You might have noticed in the file structure- there's already a Pipfile!
-
-Install any additional dependencies you know you'll need for your project by
-adding them to the `Pipfile`. Then run the commands:
-
-```console
+Then, install the dependencies in a virtual environment:
+```bash
 pipenv install
+```
+
+### 3. Activate the virtual environment
+Once the dependencies are installed, activate the virtual environment using:
+```bash
 pipenv shell
 ```
 
----
-
-## Generating Your CLI
-
-A CLI is, simply put, an interactive script and prompts the user and performs
-operations based on user input.
-
-The project template has a sample CLI in `lib/cli.py` that looks like this:
-
-```py
-# lib/cli.py
-
-from helpers import (
-    exit_program,
-    helper_1
-)
-
-
-def main():
-    while True:
-        menu()
-        choice = input("> ")
-        if choice == "0":
-            exit_program()
-        elif choice == "1":
-            helper_1()
-        else:
-            print("Invalid choice")
-
-
-def menu():
-    print("Please select an option:")
-    print("0. Exit the program")
-    print("1. Some useful function")
-
-
-if __name__ == "__main__":
-    main()
+### 4. Run the app
+To start the application, run:
+```bash
+python cli.py
 ```
 
-The helper functions are located in `lib/helpers.py`:
+### 5. Use the CLI
+You’ll be presented with the main menu, from which you can navigate to the Bands or Tour Dates menus. Each menu provides options to create, view, update, and delete entries.
 
-```py
-# lib/helpers.py
+## Instructions for Use
 
-def helper_1():
-    print("Performing useful function#1.")
+### Band Management
+- **Create a new band**: Enter the band name and genre.
+- **View all bands**: Displays a list of all bands with color-coded genres.
+- **Update a band**: Allows you to update the band’s name or genre.
+- **Delete a band**: Permanently deletes a band from the database.
 
+### Tour Date Management
+- **Schedule a new tour date**: Allows you to select a band, set the location, venue, and pick a date from the calendar.
+- **View all tour dates**: Filter by band, location, or venue.
+- **Update a tour date**: Modify details of an existing tour date.
+- **Delete a tour date**: Remove a tour date from the schedule.
 
-def exit_program():
-    print("Goodbye!")
-    exit()
+## Example Output
+Here’s what a typical interaction looks like:
+
+```
+Main Menu:
+1. Bands Menu
+2. Tour Dates Menu
+> 1
+
+Bands Menu:
+1. Create a new band
+2. View all bands
+> 2
+
+ID: 1, Name: metallica, Genre: heavy metal (color-coded)
 ```
 
-You can run the template CLI with `python lib/cli.py`, or include the shebang
-and make it executable with `chmod +x`. The template CLI will ask for input, do
-some work, and accomplish some sort of task.
-
-Past that, CLIs can be whatever you'd like, as long as you follow the project
-requirements.
-
-Of course, you will update `lib/cli.py` with prompts that are appropriate for
-your application, and you will update `lib/helpers.py` to replace `helper_1()`
-with a useful function based on the specific problem domain you decide to
-implement, along with adding other helper functions to the module.
-
-In the `lib/models` folder, you should rename `model_1.py` with the name of a
-data model class from your specific problem domain, and add other classes to the
-folder as needed. The file `lib/models/__init__.py` has been initialized to
-create the necessary database constants. You need to add import statements to
-the various data model classes in order to use the database constants.
-
-You are also welcome to implement a different module and directory structure.
-However, your project should be well organized, modular, and follow the design
-principal of separation of concerns, which means you should separate code
-related to:
-
-- User interface
-- Data persistence
-- Problem domain rules and logic
-
----
-
-## Updating README.md
-
-`README.md` is a Markdown file that should describe your project. You will
-replace the contents of this `README.md` file with a description of **your**
-actual project.
-
-Markdown is not a language that we cover in Flatiron's Software Engineering
-curriculum, but it's not a particularly difficult language to learn (if you've
-ever left a comment on Reddit, you might already know the basics). Refer to the
-cheat sheet in this assignments's resources for a basic guide to Markdown.
-
-### What Goes into a README?
-
-This README serves as a template. Replace the contents of this file to describe
-the important files in your project and describe what they do. Each Python file
-that you edit should get at least a paragraph, and each function should be
-described with a sentence or two.
-
-Describe your actual CLI script first, and with a good level of detail. The rest
-should be ordered by importance to the user. (Probably functions next, then
-models.)
-
-Screenshots and links to resources that you used throughout are also useful to
-users and collaborators, but a little more syntactically complicated. Only add
-these in if you're feeling comfortable with Markdown.
-
----
-
-## Conclusion
-
-A lot of work goes into a good CLI, but it all relies on concepts that you've
-practiced quite a bit by now. Hopefully this template and guide will get you off
-to a good start with your Phase 3 Project.
-
-Happy coding!
-
----
-
-## Resources
-
-- [Markdown Cheat Sheet](https://www.markdownguide.org/cheat-sheet/)
+## Future Improvements
+- Add more robust error handling for edge cases.
+- Implement more complex filtering and searching features for large datasets.
