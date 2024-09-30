@@ -1,13 +1,12 @@
 from models.__init__ import CONN, CURSOR
+from datetime import datetime
 
 class TourDate:
-    def __init__(self, location, date, venue):
-        self._location = None
-        self._date = None
-        self._venue = None
-        self.location = location  # This will call the setter
-        self.date = date  # This will call the setter
-        self.venue = venue  # This will call the setter
+    def __init__(self, band_id, location, date, venue):
+        self.band_id = band_id
+        self.location = location
+        self.date = date  # Calls the setter
+        self.venue = venue  # Calls the setter
 
     @property
     def location(self):
@@ -15,9 +14,9 @@ class TourDate:
 
     @location.setter
     def location(self, value):
-        if not value:
+        if not value.strip():
             raise ValueError("Location cannot be empty.")
-        self._location = value
+        self._location = value.strip().lower()
 
     @property
     def date(self):
@@ -25,6 +24,13 @@ class TourDate:
 
     @date.setter
     def date(self, value):
+        # Convert the string date (if needed) to a datetime object
+        if isinstance(value, str):
+            value = datetime.strptime(value, "%Y-%m-%d")
+
+        # Ensure the date is not in the past
+        if value < datetime.now():
+            raise ValueError("Tour date cannot be in the past.")
         self._date = value
 
     @property
@@ -33,9 +39,17 @@ class TourDate:
 
     @venue.setter
     def venue(self, value):
-        if not value:
+        
+        # Ensure no double bookings
+        result = TourDate.find_by_venue_and_date(value, self.date)
+        
+        if result:
+            raise ValueError("This venue is already booked for that date.")
+        
+        if not value.strip():
             raise ValueError("Venue cannot be empty.")
-        self._venue = value
+        
+        self._venue = value.strip().lower()
 
     @classmethod
     def all(cls):
@@ -43,9 +57,9 @@ class TourDate:
 
     @classmethod
     def create(cls, band_id, location, date, venue):
-        tour_date = cls(location, date, venue)
+        tour_date = cls(band_id, location, date, venue)
         CURSOR.execute("INSERT INTO tour_dates (band_id, location, date, venue) VALUES (?, ?, ?, ?)", 
-                       (band_id, tour_date.location, tour_date.date, tour_date.venue))
+                       (tour_date.band_id, tour_date.location, tour_date.date, tour_date.venue))
         CONN.commit()
         print(f"Tour date created for band with ID {band_id}.")
 
@@ -81,27 +95,33 @@ class TourDate:
     
     @classmethod
     def find_by_location(cls, location):
+        # Ensure location comparison is case-insensitive by using LOWER
         return CURSOR.execute("""
             SELECT tour_dates.id, bands.id, bands.name, tour_dates.location, tour_dates.date, tour_dates.venue 
             FROM tour_dates
             JOIN bands ON tour_dates.band_id = bands.id
-            WHERE tour_dates.location = ?
+            WHERE LOWER(tour_dates.location) = ?
             ORDER BY tour_dates.date
-        """, (location,)).fetchall()
+        """, (location.strip().lower(),)).fetchall()
 
     @classmethod
     def find_by_venue(cls, venue):
+        # Ensure venue comparison is case-insensitive by using LOWER
         return CURSOR.execute("""
             SELECT tour_dates.id, bands.id, bands.name, tour_dates.location, tour_dates.date, tour_dates.venue 
             FROM tour_dates
             JOIN bands ON tour_dates.band_id = bands.id
-            WHERE tour_dates.venue = ?
+            WHERE LOWER(tour_dates.venue) = ?
             ORDER BY tour_dates.date
-        """, (venue,)).fetchall()
+        """, (venue.strip().lower(),)).fetchall()
 
     @classmethod
     def find_by_venue_and_date(cls, venue, date):
-        return CURSOR.execute("SELECT * FROM tour_dates WHERE venue = ? AND date = ?", (venue, date)).fetchone()
+        # Use DATE() to compare only the date part, ignoring the time
+        return CURSOR.execute(
+            "SELECT * FROM tour_dates WHERE LOWER(venue) = ? AND DATE(date) = DATE(?)",
+            (venue.strip().lower(), date)
+        ).fetchone()
 
     @classmethod
     def all_chronological(cls):

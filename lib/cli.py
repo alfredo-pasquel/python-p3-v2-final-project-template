@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from colorama import Fore, init
 from tkcalendar import Calendar
 import tkinter as tk
@@ -84,16 +86,6 @@ def select_date_gui():
     root.destroy()
     
     return selected_date
-
-def validate_future_date(selected_date):
-    # Convert selected date (in YYYY-MM-DD format) to a date object
-    selected_date_obj = datetime.strptime(selected_date, "%Y-%m-%d").date()
-    
-    # Get the current date
-    current_date = datetime.now().date()
-    
-    # Check if the selected date is in the future
-    return selected_date_obj >= current_date
 
 def format_date(date_str):
     try:
@@ -205,24 +197,16 @@ def view_bands():
             print(genre_color + f"ID: {band[0]}, Name: {band[1]}, Genre: {band[2]}")
 
 def create_band():
-    name = input(Fore.CYAN + "Enter band name (max 50 characters): ")
-    
-    existing_band = Band.find_by_name(name)
 
-    if existing_band:
-        print(Fore.RED + f"Error: A band named '{name}' already exists.")
-        return
-    
-    genre = input(Fore.CYAN + "Enter genre (max 30 characters): ")
-    
     try:
+        name = input(Fore.CYAN + "Enter band name: ")
+        genre = input(Fore.CYAN + "Enter genre: ")
         Band.create(name, genre)
-        print(Fore.GREEN + f"Band '{name}' created.")
     except ValueError as e:
         print(Fore.RED + f"Error: {e}")
 
 def update_band():
-    band_name_or_id = input(Fore.CYAN + "Enter the band name or ID to update: ")
+    band_name_or_id = input(Fore.CYAN + "Enter the band name or ID to update: ").strip().lower()
 
     # Find the band by name or ID
     if band_name_or_id.isdigit():
@@ -233,13 +217,14 @@ def update_band():
     if not band:
         print(Fore.RED + "Error: Band not found.")
         return
-
+    
     new_name = input(Fore.CYAN + f"Enter new name for band '{band[1]}' (leave blank to keep current): ")
     new_genre = input(Fore.CYAN + f"Enter new genre for band '{band[2]}' (leave blank to keep current): ")
 
+    print(f"New Name: {new_name}, New Genre: {new_genre}")  # Debugging
+    
     try:
         Band.update(band[0], new_name if new_name else None, new_genre if new_genre else None)
-        print(Fore.GREEN + f"Band '{band[1]}' (ID: {band[0]}) has been updated.")
     except ValueError as e:
         print(Fore.RED + f"Error: {e}")
 
@@ -257,7 +242,6 @@ def delete_band():
         return
 
     Band.delete(band[0])
-    print(Fore.GREEN + f"Band '{band[1]}' (ID: {band[0]}) has been deleted.")
 
 def view_band_related_tours():
     band_name_or_id = input(Fore.CYAN + "Enter the band name or ID: ")
@@ -285,10 +269,10 @@ def view_tour_dates():
     print(Fore.CYAN + "3. By Venue")
     print(Fore.CYAN + "4. View All Tour Dates")
     
-    choice = input(Fore.YELLOW + "> ")
+    choice = input(Fore.YELLOW + "> ").strip().lower()
 
     if choice == "1":
-        band_name_or_id = input(Fore.CYAN + "Enter the band name or ID: ")
+        band_name_or_id = input(Fore.CYAN + "Enter the band name or ID: ").strip().lower()  # Normalize input
         if band_name_or_id.isdigit():
             band = Band.find_by_id(band_name_or_id)
         else:
@@ -299,50 +283,36 @@ def view_tour_dates():
             return
         
         tour_dates = TourDate.find_by_band(band[0])
-        if not tour_dates:
-            print(Fore.RED + f"No tour dates found for band {band[1]}.")
-        else:
-            for tour in tour_dates:
-                # Normalize location name before applying color
-                location_color = ColorManager.get_location_color(tour[3])
-                print(location_color + f"ID: {tour[0]}, Band: {tour[2]} (ID: {tour[1]}), Location: {tour[3]}, Date: {tour[4]}, Venue: {tour[5]}")
+        display_tour_dates(tour_dates, f"No tour dates found for band {band[1]}.")
 
     elif choice == "2":
-        location = input(Fore.CYAN + "Enter the location: ").strip().lower()  # Normalize user input for comparison
+        location = input(Fore.CYAN + "Enter the location: ").strip().lower()  # Normalize input
         tour_dates = TourDate.find_by_location(location)
-
-        if not tour_dates:
-            print(Fore.RED + f"No tour dates found at location '{location}'.")
-        else:
-            for tour in tour_dates:
-                location_color = ColorManager.get_location_color(tour[3])
-                print(location_color + f"ID: {tour[0]}, Band: {tour[2]} (ID: {tour[1]}), Location: {tour[3]}, Date: {tour[4]}, Venue: {tour[5]}")
+        display_tour_dates(tour_dates, f"No tour dates found at location '{location}'.")
 
     elif choice == "3":
-        venue = input(Fore.CYAN + "Enter the venue: ")
+        venue = input(Fore.CYAN + "Enter the venue: ").strip().lower()  # Normalize input
         tour_dates = TourDate.find_by_venue(venue)
-
-        if not tour_dates:
-            print(Fore.RED + f"No tour dates found at venue '{venue}'.")
-        else:
-            for tour in tour_dates:
-                location_color = ColorManager.get_location_color(tour[3])
-                print(location_color + f"ID: {tour[0]}, Band: {tour[2]} (ID: {tour[1]}), Location: {tour[3]}, Date: {tour[4]}, Venue: {tour[5]}")
+        display_tour_dates(tour_dates, f"No tour dates found at venue '{venue}'.")
 
     elif choice == "4":
         tour_dates = TourDate.all_chronological()
+        display_tour_dates(tour_dates, "No tour dates found.")
 
-        if not tour_dates:
-            print(Fore.RED + "No tour dates found.")
-        else:
-            for tour in tour_dates:
-                location_color = ColorManager.get_location_color(tour[3])
-                print(location_color + f"ID: {tour[0]}, Band: {tour[2]} (ID: {tour[1]}), Location: {tour[3]}, Date: {tour[4]}, Venue: {tour[5]}")
     else:
         print(Fore.RED + "Invalid choice. Please select a valid option.")
 
+def display_tour_dates(tour_dates, not_found_message):
+    
+    if not tour_dates:
+        print(Fore.RED + not_found_message)
+    else:
+        for tour in tour_dates:
+            location_color = ColorManager.get_location_color(tour[3])
+            print(location_color + f"ID: {tour[0]}, Band: {tour[2]} (ID: {tour[1]}), Location: {tour[3]}, Date: {tour[4]}, Venue: {tour[5]}")
+
 def schedule_tour_date():
-    band_name_or_id = input(Fore.CYAN + "Enter the band name or ID: ")
+    band_name_or_id = input(Fore.CYAN + "Enter the band name or ID: ").strip().lower()
 
     if band_name_or_id.isdigit():
         band = Band.find_by_id(band_name_or_id)
@@ -353,32 +323,28 @@ def schedule_tour_date():
         print(Fore.RED + "Error: Band not found.")
         return
 
-    location = input(Fore.CYAN + "Enter location: ")  
+    location = input(Fore.CYAN + "Enter location: ").strip().lower()  
 
-    # Get date from calendar
+    # Get date from calendar (using your existing GUI function)
     date = select_date_gui()
     formatted_date = format_date(date)
 
-    # Validate that the date is in the future
-    if not validate_future_date(formatted_date):
-        print(Fore.RED + "Error: The selected date is in the past. Please select a future date.")
-        return
+    # No need for explicit future date validation here, it will be handled in the TourDate class
 
-    venue = input(Fore.CYAN + "Enter venue: ")
+    venue = input(Fore.CYAN + "Enter venue: ").strip().lower()
 
-    # Check if the venue is already booked for the selected date
-    existing_tour = TourDate.find_by_venue_and_date(venue, formatted_date)
-    if existing_tour:
-        print(Fore.RED + f"Error: The venue '{venue}' is already booked on {formatted_date}.")
-        return
+    # Venue booking validation is now in the TourDate class, so no need for a separate check
 
-    # If everything is valid, proceed with creating the tour date
-    TourDate.create(band[0], location, formatted_date, venue)
-    print(Fore.GREEN + "Tour date created.")
+    try:
+        # Create the tour date
+        TourDate.create(band[0], location, formatted_date, venue)
+        print(Fore.GREEN + "Tour date created.")
+    except ValueError as e:
+        print(Fore.RED + f"Error: {e}")
 
 def update_tour_date():
-    use_tour_id = input(Fore.CYAN + "Do you know the tour ID? (y/n): ").lower()
-    
+    use_tour_id = input(Fore.CYAN + "Do you know the tour ID? (y/n): ").strip().lower()
+
     if use_tour_id == 'y':
         tour_id = input(Fore.CYAN + "Enter the Tour ID: ")
         tour = TourDate.find_by_id(tour_id)
@@ -386,7 +352,7 @@ def update_tour_date():
             print(Fore.RED + "Tour not found.")
             return
     else:
-        venue = input(Fore.CYAN + "Enter the venue: ")
+        venue = input(Fore.CYAN + "Enter the venue: ").strip().lower()
         print(Fore.CYAN + "Select the tour date:")
         date = select_date_gui()
         formatted_date = format_date(date)
@@ -394,44 +360,46 @@ def update_tour_date():
         if not tour:
             print(Fore.RED + "Tour not found.")
             return
-    
+
     band = Band.find_by_id(tour[1])
     if band:
         print(Fore.GREEN + f"Tour at '{tour[4]}' on {tour[3]} for Band '{band[1]}' has been found.")
     else:
         print(Fore.GREEN + f"Tour at '{tour[4]}' on {tour[3]} for Band ID {tour[1]} has been found.")
-    
-    new_location = input(Fore.CYAN + f"Enter new location for tour (current: {tour[2]}) (leave blank to keep current): ")
+
+    new_location = input(Fore.CYAN + f"Enter new location for tour (current: {tour[2]}) (leave blank to keep current): ").strip().lower()
 
     print(Fore.CYAN + "Select the new tour date:")
     new_date = select_date_gui()
     formatted_new_date = format_date(new_date)
 
-    if not validate_future_date(formatted_new_date):
-        print(Fore.RED + "Error: You cannot select a date in the past.")
-        return
+    # No need to explicitly validate the date, as this will be handled by the setter in the TourDate class
 
-    new_venue = input(Fore.CYAN + f"Enter new venue for tour (current: {tour[4]}) (leave blank to keep current): ")
+    new_venue = input(Fore.CYAN + f"Enter new venue for tour (current: {tour[4]}) (leave blank to keep current): ").strip().lower()
 
-    TourDate.update(
-        tour[0], 
-        new_location if new_location else None, 
-        formatted_new_date if new_date else None, 
-        new_venue if new_venue else None
-    )
-    print(Fore.GREEN + f"Tour at '{new_location}' on {formatted_new_date} for Band '{band[1]}' has been updated.")
+    try:
+        # Update the tour with the new values, validation is handled in the TourDate class
+        TourDate.update(
+            tour[0], 
+            new_location if new_location else None, 
+            formatted_new_date if new_date else None, 
+            new_venue if new_venue else None
+        )
+        print(Fore.GREEN + f"Tour at '{new_location if new_location else tour[2]}' on {formatted_new_date} for Band '{band[1]}' has been updated.")
+    except ValueError as e:
+        print(Fore.RED + f"Error: {e}")
 
 def delete_tour_date():
-    use_tour_id = input(Fore.CYAN + "Do you know the tour ID? (y/n): ").lower()
+    use_tour_id = input(Fore.CYAN + "Do you know the tour ID? (y/n): ").strip().lower()
     
     if use_tour_id == 'y':
-        tour_id = input(Fore.CYAN + "Enter the Tour ID: ")
+        tour_id = input(Fore.CYAN + "Enter the Tour ID: ").strip()
         tour = TourDate.find_by_id(tour_id)
         if not tour:
             print(Fore.RED + "Tour not found.")
             return
     else:
-        venue = input(Fore.CYAN + "Enter the venue: ")
+        venue = input(Fore.CYAN + "Enter the venue: ").strip().lower()
         print(Fore.CYAN + "Select the tour date:")
         date = select_date_gui()
         formatted_date = format_date(date)
@@ -444,7 +412,7 @@ def delete_tour_date():
     if band:
         print(Fore.GREEN + f"Tour at '{tour[4]}' on {tour[3]} for Band '{band[1]}' has been deleted.")
     else:
-        print(Fore.GREEN + f"Tour at '{tour[4]}' on {tour[3]} for Band ID {tour[1]} has been deleted.")
+        print(Fore.GREEN + f"Tour at '{tour[4]}' on {tour[3]} for Band '{band[1]}' has been deleted.")
 
     TourDate.delete(tour[0])
 
