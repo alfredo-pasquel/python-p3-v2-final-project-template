@@ -220,8 +220,6 @@ def update_band():
     
     new_name = input(Fore.CYAN + f"Enter new name for band '{band[1]}' (leave blank to keep current): ")
     new_genre = input(Fore.CYAN + f"Enter new genre for band '{band[2]}' (leave blank to keep current): ")
-
-    print(f"New Name: {new_name}, New Genre: {new_genre}")  # Debugging
     
     try:
         Band.update(band[0], new_name if new_name else None, new_genre if new_genre else None)
@@ -309,7 +307,7 @@ def display_tour_dates(tour_dates, not_found_message):
     else:
         for tour in tour_dates:
             location_color = ColorManager.get_location_color(tour[3])
-            print(location_color + f"ID: {tour[0]}, Band: {tour[2]} (ID: {tour[1]}), Location: {tour[3]}, Date: {tour[4]}, Venue: {tour[5]}")
+            print(location_color + f"ID: {tour[0]}, Band: {tour[2]} (Band ID: {tour[1]}), Location: {tour[3]}, Date: {tour[4]}, Venue: {tour[5]}")
 
 def schedule_tour_date():
     band_name_or_id = input(Fore.CYAN + "Enter the band name or ID: ").strip().lower()
