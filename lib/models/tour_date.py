@@ -5,8 +5,8 @@ class TourDate:
     def __init__(self, band_id, location, date, venue):
         self.band_id = band_id
         self.location = location
-        self.date = date  # Calls the setter
-        self.venue = venue  # Calls the setter
+        self.date = date
+        self.venue = venue
 
     @property
     def location(self):
@@ -24,11 +24,10 @@ class TourDate:
 
     @date.setter
     def date(self, value):
-        # Convert the string date (if needed) to a datetime object
+
         if isinstance(value, str):
             value = datetime.strptime(value, "%Y-%m-%d")
 
-        # Ensure the date is not in the past
         if value < datetime.now():
             raise ValueError("Tour date cannot be in the past.")
         self._date = value
@@ -40,7 +39,6 @@ class TourDate:
     @venue.setter
     def venue(self, value):
         
-        # Ensure no double bookings
         result = TourDate.find_by_venue_and_date(value, self.date)
         
         if result:
@@ -95,7 +93,6 @@ class TourDate:
     
     @classmethod
     def find_by_location(cls, location):
-        # Ensure location comparison is case-insensitive by using LOWER
         return CURSOR.execute("""
             SELECT tour_dates.id, bands.id, bands.name, tour_dates.location, tour_dates.date, tour_dates.venue 
             FROM tour_dates
@@ -106,7 +103,6 @@ class TourDate:
 
     @classmethod
     def find_by_venue(cls, venue):
-        # Ensure venue comparison is case-insensitive by using LOWER
         return CURSOR.execute("""
             SELECT tour_dates.id, bands.id, bands.name, tour_dates.location, tour_dates.date, tour_dates.venue 
             FROM tour_dates
@@ -117,7 +113,6 @@ class TourDate:
 
     @classmethod
     def find_by_venue_and_date(cls, venue, date):
-        # Use DATE() to compare only the date part, ignoring the time
         return CURSOR.execute(
             "SELECT * FROM tour_dates WHERE LOWER(venue) = ? AND DATE(date) = DATE(?)",
             (venue.strip().lower(), date)

@@ -2,8 +2,8 @@ from models.__init__ import CONN, CURSOR
 
 class Band:
     def __init__(self, name, genre):
-        self.name = name  # Calls the setter
-        self.genre = genre  # Calls the setter
+        self.name = name
+        self.genre = genre
 
     @property
     def name(self):
@@ -11,7 +11,7 @@ class Band:
 
     @name.setter
     def name(self, value):
-        # Ensure band name is unique
+
         if Band.find_by_name(value):
             raise ValueError(f"Band name '{value}' is already taken.")
         if not (0 < len(value) <= 50):
@@ -45,18 +45,15 @@ class Band:
 
     @classmethod
     def update(cls, band_id, new_name=None, new_genre=None):
-        band = cls.find_by_id(band_id)  # Fetch the current band data
+        band = cls.find_by_id(band_id)
         
-        # Use current values if no new ones are provided
-        name_to_update = new_name.strip().lower() if new_name else band[1].strip().lower()  # Current name is at index 1
-        genre_to_update = new_genre.strip().lower() if new_genre else band[2].strip().lower()  # Normalize genre to lowercase
+        name_to_update = new_name.strip().lower() if new_name else band[1].strip().lower()
+        genre_to_update = new_genre.strip().lower() if new_genre else band[2].strip().lower()
 
-        # Only check uniqueness if a new name is provided AND it's different from the current one
         if new_name and new_name.strip() and new_name.strip().lower() != band[1].strip().lower():
             if Band.find_by_name(new_name.strip().lower()):
                 raise ValueError(f"Band name '{new_name}' is already taken.")
 
-        # Perform the database update using current or new values
         CURSOR.execute("UPDATE bands SET name = ?, genre = ? WHERE id = ?", 
                     (name_to_update, genre_to_update, band_id))
         CONN.commit()
@@ -64,20 +61,17 @@ class Band:
 
     @classmethod
     def delete(cls, band_id):
-        # Fetch the band details before deletion
+
         band = cls.find_by_id(band_id)
         
         if not band:
             print(f"Band with ID {band_id} not found.")
             return
 
-        # Proceed to delete the band
         CURSOR.execute("DELETE FROM bands WHERE id = ?", (band_id,))
         CONN.commit()
 
-        # Print the deleted band's details
         print(f"Band '{band[1]}' with genre '{band[2]}' has been successfully deleted.")
-
         
     @classmethod
     def find_by_id(cls, band_id):

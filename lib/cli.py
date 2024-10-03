@@ -18,7 +18,6 @@ class ColorManager:
     genre_colors = {}
     location_colors = {}
     
-    # Sets to track used colors for genres and locations
     used_genre_colors = set()
     used_location_colors = set()
 
@@ -27,12 +26,10 @@ class ColorManager:
         if genre not in cls.genre_colors:
             available_colors = [color for color in cls.COLORS if color not in cls.used_genre_colors]
             
-            # If no available colors, reset the used colors
             if not available_colors:
                 cls.used_genre_colors.clear()
                 available_colors = cls.COLORS.copy()
 
-            # Assign a random color from the available colors
             selected_color = random.choice(available_colors)
             cls.genre_colors[genre] = selected_color
             cls.used_genre_colors.add(selected_color)
@@ -41,47 +38,38 @@ class ColorManager:
 
     @classmethod
     def get_location_color(cls, location):
-        # Normalize location to lowercase for consistency
         normalized_location = location.strip().lower()
 
         if normalized_location not in cls.location_colors:
             available_colors = [color for color in cls.COLORS if color not in cls.used_location_colors]
             
-            # If no available colors, reset the used colors
             if not available_colors:
                 cls.used_location_colors.clear()
                 available_colors = cls.COLORS.copy()
 
-            # Assign a random color from the available colors
             selected_color = random.choice(available_colors)
             cls.location_colors[normalized_location] = selected_color
             cls.used_location_colors.add(selected_color)
 
         return cls.location_colors[normalized_location]
 
-# Function to select a date using tkcalendar
 def select_date_gui():
     selected_date = None
     
-    # Create the window
     root = tk.Tk()
     root.title("Select a Date")
 
-    # Create the calendar widget
     cal = Calendar(root, selectmode='day', year=2024, month=10, day=1)
     cal.pack(pady=20)
 
-    # Define a function to grab the selected date and destroy the window
     def grab_date():
         nonlocal selected_date
         selected_date = cal.get_date()
         root.quit()
 
-    # Add a button to select the date
     select_btn = tk.Button(root, text="Select", command=grab_date)
     select_btn.pack(pady=20)
 
-    # Start the main event loop
     root.mainloop()
     root.destroy()
     
@@ -89,19 +77,19 @@ def select_date_gui():
 
 def format_date(date_str):
     try:
-        # First, try converting from MM/DD/YY (tkcalendar format)
+
         formatted_date = datetime.strptime(date_str, "%m/%d/%y").strftime("%Y-%m-%d")
         return formatted_date
     except ValueError:
         try:
-            # If that fails, try converting from YYYY-MM-DD (manual entry format)
+
             formatted_date = datetime.strptime(date_str, "%Y-%m-%d").strftime("%Y-%m-%d")
             return formatted_date
         except ValueError as e:
-            # Print the error and the problematic date
+            
             print(f"Error formatting date: {date_str}")
             print(f"Exception: {e}")
-            raise e  # Re-raise the error to avoid silent failures
+            raise e
 
 def main():
     while True:
@@ -176,7 +164,7 @@ def view_bands():
     band_name_or_id = input(Fore.CYAN + "Enter the band name or ID to view (leave blank to view all): ")
 
     if band_name_or_id:
-        # Find by ID or name
+
         if band_name_or_id.isdigit():
             band = Band.find_by_id(band_name_or_id)
         else:
@@ -185,14 +173,14 @@ def view_bands():
         if not band:
             print(Fore.RED + "Band not found.")
         else:
-            # Apply genre-based color randomization
+
             genre_color = ColorManager.get_genre_color(band[2])  
             print(genre_color + f"ID: {band[0]}, Name: {band[1]}, Genre: {band[2]}")
     else:
-        # Display all bands
+
         bands = Band.all()
         for band in bands:
-            # Apply genre-based color randomization
+
             genre_color = ColorManager.get_genre_color(band[2])
             print(genre_color + f"ID: {band[0]}, Name: {band[1]}, Genre: {band[2]}")
 
@@ -208,7 +196,6 @@ def create_band():
 def update_band():
     band_name_or_id = input(Fore.CYAN + "Enter the band name or ID to update: ").strip().lower()
 
-    # Find the band by name or ID
     if band_name_or_id.isdigit():
         band = Band.find_by_id(band_name_or_id)
     else:
@@ -229,7 +216,6 @@ def update_band():
 def delete_band():
     band_name_or_id = input(Fore.CYAN + "Enter the band name or ID to delete: ")
 
-    # Find the band by name or ID
     if band_name_or_id.isdigit():
         band = Band.find_by_id(band_name_or_id)
     else:
@@ -270,7 +256,7 @@ def view_tour_dates():
     choice = input(Fore.YELLOW + "> ").strip().lower()
 
     if choice == "1":
-        band_name_or_id = input(Fore.CYAN + "Enter the band name or ID: ").strip().lower()  # Normalize input
+        band_name_or_id = input(Fore.CYAN + "Enter the band name or ID: ").strip().lower()
         if band_name_or_id.isdigit():
             band = Band.find_by_id(band_name_or_id)
         else:
@@ -284,12 +270,12 @@ def view_tour_dates():
         display_tour_dates(tour_dates, f"No tour dates found for band {band[1]}.")
 
     elif choice == "2":
-        location = input(Fore.CYAN + "Enter the location: ").strip().lower()  # Normalize input
+        location = input(Fore.CYAN + "Enter the location: ").strip().lower()
         tour_dates = TourDate.find_by_location(location)
         display_tour_dates(tour_dates, f"No tour dates found at location '{location}'.")
 
     elif choice == "3":
-        venue = input(Fore.CYAN + "Enter the venue: ").strip().lower()  # Normalize input
+        venue = input(Fore.CYAN + "Enter the venue: ").strip().lower()
         tour_dates = TourDate.find_by_venue(venue)
         display_tour_dates(tour_dates, f"No tour dates found at venue '{venue}'.")
 
@@ -323,18 +309,12 @@ def schedule_tour_date():
 
     location = input(Fore.CYAN + "Enter location: ").strip().lower()  
 
-    # Get date from calendar (using your existing GUI function)
     date = select_date_gui()
     formatted_date = format_date(date)
 
-    # No need for explicit future date validation here, it will be handled in the TourDate class
-
     venue = input(Fore.CYAN + "Enter venue: ").strip().lower()
 
-    # Venue booking validation is now in the TourDate class, so no need for a separate check
-
     try:
-        # Create the tour date
         TourDate.create(band[0], location, formatted_date, venue)
         print(Fore.GREEN + "Tour date created.")
     except ValueError as e:
@@ -371,12 +351,10 @@ def update_tour_date():
     new_date = select_date_gui()
     formatted_new_date = format_date(new_date)
 
-    # No need to explicitly validate the date, as this will be handled by the setter in the TourDate class
-
     new_venue = input(Fore.CYAN + f"Enter new venue for tour (current: {tour[4]}) (leave blank to keep current): ").strip().lower()
 
     try:
-        # Update the tour with the new values, validation is handled in the TourDate class
+
         TourDate.update(
             tour[0], 
             new_location if new_location else None, 
@@ -429,6 +407,5 @@ def view_tour_related_band():
     else:
         print(Fore.RED + "Band not found for this tour.")
 
-# Entry point for the CLI application
 if __name__ == "__main__":
     main()
